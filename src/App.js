@@ -135,6 +135,7 @@ function App(props) {
     <div className="App">
       <div className="App-header">
         <img src={logo} className="App-logo" alt="logo" />
+        <h4>This is mine</h4>
       </div>
       <div className="Game">
         <Board></Board>
