@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { useState, useEffect } from 'react';
 import logo from './logo.svg';
 import './App.css';
 
@@ -45,7 +45,6 @@ function checkWinner(bs) {
 }
 
 function Hole(props) {
-  // console.log('Hole', props);
   return (
     <div className="Hole">
       <div className={props.value}></div>
@@ -54,7 +53,6 @@ function Hole(props) {
 }
 
 function Slat(props) {
-  // console.log('Slat', props);
   return (
     <div className="Slat" onClick={() => props.handleClick()}>
       {[...Array(props.holes.length)].map((x, j) => (
@@ -64,102 +62,85 @@ function Slat(props) {
   );
 }
 
-class Board extends Component {
-  constructor() {
-    super();
-    this.state = {
-      boardState: new Array(7).fill(new Array(6).fill(null)),
-      playerTurn: 'Red',
-      gameMode: '',
-      gameSelected: false,
-      winner: '',
-    };
-  }
+function Board(props) {
+  const [boardState, setBoardState] = useState(
+    new Array(7).fill(new Array(6).fill(null))
+  );
+  const [winner, setWinner] = useState('');
+  const [playerTurn, setPlayTurn] = useState('Red');
+  const [gameSelected, setGameSelected] = useState(false);
 
-  selectedGame(mode) {
-    this.setState({
-      gameMode: mode,
-      gameSelected: true,
-      boardState: new Array(7).fill(new Array(6).fill(null)),
-    });
-  }
+  const selectedGame = () => {
+    setGameSelected(true);
+    setBoardState(new Array(7).fill(new Array(6).fill(null)));
+  };
 
-  makeMove(slatID) {
-    console.log(slatID);
-    const boardCopy = this.state.boardState.map(function (arr) {
+  const makeMove = (slatID) => {
+    const boardCopy = boardState.map(function (arr) {
       return arr.slice();
     });
     if (boardCopy[slatID].indexOf(null) !== -1) {
       let newSlat = boardCopy[slatID].reverse();
-      newSlat[newSlat.indexOf(null)] = this.state.playerTurn;
+      newSlat[newSlat.indexOf(null)] = playerTurn;
       newSlat.reverse();
-      this.setState({
-        playerTurn: this.state.playerTurn === 'Red' ? 'Blue' : 'Red',
-        boardState: boardCopy,
-      });
+      setPlayTurn(playerTurn === 'Red' ? 'Blue' : 'Red');
+      setBoardState(boardCopy);
     }
+  };
+
+  const handleClick = (slatID) => {
+    if (winner === '') {
+      makeMove(slatID);
+    }
+  };
+
+  useEffect(() => {
+    let check_winner = checkWinner(boardState);
+    if (winner !== check_winner) {
+      setWinner(check_winner);
+    }
+  }, [boardState, winner]);
+
+  let winnerMessageStyle;
+  if (winner !== '') {
+    winnerMessageStyle = 'winnerMessage appear';
+  } else {
+    winnerMessageStyle = 'winnerMessage';
   }
 
-  /*Only make moves if winner doesn't exist*/
-  handleClick(slatID) {
-    if (this.state.winner === '') {
-      this.makeMove(slatID);
-    }
-  }
+  /*Contruct slats allocating column from board*/
+  let slats = [...Array(boardState.length)].map((x, i) => (
+    <Slat
+      key={i}
+      holes={boardState[i]}
+      handleClick={() => handleClick(i)}
+    ></Slat>
+  ));
 
-  /*check the winner*/
-  componentDidUpdate() {
-    let winner = checkWinner(this.state.boardState);
-    if (this.state.winner !== winner) {
-      this.setState({ winner: winner });
-    }
-  }
-
-  render() {
-    /*If a winner exists display the name*/
-    let winnerMessageStyle;
-    if (this.state.winner !== '') {
-      winnerMessageStyle = 'winnerMessage appear';
-    } else {
-      winnerMessageStyle = 'winnerMessage';
-    }
-
-    /*Contruct slats allocating column from board*/
-    let slats = [...Array(this.state.boardState.length)].map((x, i) => (
-      <Slat
-        key={i}
-        holes={this.state.boardState[i]}
-        handleClick={() => this.handleClick(i)}
-      ></Slat>
-    ));
-
-    return (
-      <div>
-        {this.state.gameSelected && <div className="Board">{slats}</div>}
-        <div className={winnerMessageStyle}>{this.state.winner}</div>
-        {(!this.state.gameSelected || this.state.winner !== '') && (
-          <div>
-            <button onClick={() => this.selectedGame('human')}>Play</button>
-          </div>
-        )}
-      </div>
-    );
-  }
+  return (
+    <div>
+      {gameSelected && <div className="Board">{slats}</div>}
+      <div className={winnerMessageStyle}>{winner}</div>
+      {(!gameSelected || winner !== '') && (
+        <div>
+          <button onClick={() => selectedGame()}>Play</button>
+        </div>
+      )}
+    </div>
+  );
 }
 
-class App extends Component {
-  render() {
-    return (
-      <div className="App">
-        <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-        </div>
-        <div className="Game">
-          <Board></Board>
-        </div>
+function App(props) {
+  return (
+    <div className="App">
+      <div className="App-header">
+        <img src={logo} className="App-logo" alt="logo" />
       </div>
-    );
-  }
+      <div className="Game">
+        <Board></Board>
+      </div>
+    </div>
+  );
 }
 
 export default App;
