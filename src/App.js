@@ -153,6 +153,7 @@ class App extends Component {
       <div className="App">
         <div className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
+          <h4>Modifications</h4>
         </div>
         <div className="Game">
           <Board></Board>
